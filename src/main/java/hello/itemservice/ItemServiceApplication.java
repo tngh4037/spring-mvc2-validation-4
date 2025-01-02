@@ -15,6 +15,7 @@ public class ItemServiceApplication
 		SpringApplication.run(ItemServiceApplication.class, args);
 	}
 
+	// 참고) 글로벌 설정을 하면 BeanValidator가 자동 등록되지 않는다.
 	// @Override
 	// public Validator getValidator() {
 	// 	  return new ItemValidator();

@@ -53,6 +53,9 @@ public class ValidationItemControllerV2 {
         return "validation/v2/addForm";
     }
 
+    /**
+     * ValidationItemControllerV1 errors map -> bindingResult 적용
+     */
     // BindingResult: 말 그대로 바인딩이 된 결과이다. 무엇이 바인딩 된 결과냐면, Item에 바인딩이 된 결과가 bindingReult에 담기는 것이다.
     // ㄴ (참고): 순서가 중요하다 !
     // @PostMapping("/add")
@@ -106,6 +109,11 @@ public class ValidationItemControllerV2 {
         return "redirect:/validation/v2/items/{itemId}";
     }
 
+    /**
+     * 사용자 입력 값 유지 (2번째 생성자 사용)
+     *
+     * - 참고) th:field 는 매우 똑똑하게 동작하는데, 정상 상황에는 모델 객체의 값을 사용하지만, 오류가 발생하면 FieldError 에서 보관한 값을 사용해서 값을 출력한다.
+     */
     // BindingResult: 말 그대로 바인딩이 된 결과이다. 무엇이 바인딩 된 결과냐면, Item에 바인딩이 된 결과가 bindingReult에 담기는 것이다.
     // ㄴ (참고): 순서가 중요하다 !
     // @PostMapping("/add")
@@ -158,8 +166,9 @@ public class ValidationItemControllerV2 {
         return "redirect:/validation/v2/items/{itemId}";
     }
 
-    // To. 아직도 웹 브라우저를 통해서 테스트 하고있는 백엔드 개발자에게.
-
+    /**
+     * 일관성 있는 오류 메시지 관리
+     */
     // @PostMapping("/add")
     public String addItemV3(@ModelAttribute Item item, BindingResult bindingResult,
                             RedirectAttributes redirectAttributes) {
@@ -210,6 +219,40 @@ public class ValidationItemControllerV2 {
         return "redirect:/validation/v2/items/{itemId}";
     }
 
+    /**
+     * 코드가 너무 먾고 복잡하다.
+     * BindingResult 가 제공하는 rejectValue(), reject() 를 사용하면 FieldError , ObjectError 를 직접 생성하지 않고, 깔끔하게 검증 오류를 다룰 수 있다.
+     *
+     * 참고)
+     * - 컨트롤러에서 BindingResult 는 검증해야 할 객체인 target 바로 다음에 온다.
+     * - 따라서, BindingResult 는 이미 본인이 검증해야 할 객체인 target 을 알고있다.
+     * - 이미 target을 알고 있다면, 컨트롤러 로직에서 FieldError, ObjectError 를 생성할 때, 파라미터로 넣어줬던 objectName 등은 생략할 수도 있지 않을까 ?
+     * - 맞다. ( rejectValue(), reject() 내부에서 이미 getObjectName 등을 사용해서 다 넣어준다. )
+     *
+     * 참고)
+     * - reject: object error
+     * - rejectValue: field error
+     *
+     * 참고)
+     * - reject, rejectValue 는 내부에서 MessageCodesResolver 를 사용해서 검증 오류 코드로 (메시지에서 찾을 수 있는) 메시지 코드들을 생성한다.
+     *
+     * [ MessageCodesResolver 의 기본 메시지 생성 규칙 - 구체적인 것을 먼저 만들어주고, 덜 구체적인 것을 가장 나중에 만든다. ]
+     * 1) object error 의 경우 다음 순서로 2가지 메시지 코드 생성
+     * - code + "." + object name -> ( required.item )
+     * - code -> ( required )
+     *
+     * 2) field error 의 경우 다음 순서로 4가지 메시지 코드 생성
+     * - code + "." + object name + "." + field -> ( required.item.itemName )
+     * - code + "." + field  -> ( required.itemName )
+     * - code + "." + field type -> ( required.java.lang.String )
+     * - code -> ( required )
+     *
+     * 참고)
+     * - 오류 메시지 출력
+     *   ㄴ 타임리프 화면을 렌더링 할 때, th:erros 가 실행된다.
+     *   ㄴ 만약 이때 오류가 있다면, 생성된 오류 메시지 코드들을 기반으로 순서대로 돌아가면서 메시지에서 찾는다.
+     *   ㄴ 그리고 없으면 디폴트 메시지를 출력한다.
+     */
     //@PostMapping("/add")
     public String addItemV4(@ModelAttribute Item item, BindingResult bindingResult,
                             RedirectAttributes redirectAttributes) {
@@ -277,6 +320,9 @@ public class ValidationItemControllerV2 {
         return "redirect:/validation/v2/items/{itemId}";
     }
 
+    /**
+     * Validator 분리 (1)
+     */
     //@PostMapping("/add")
     public String addItemV5(@ModelAttribute Item item, BindingResult bindingResult,
                             RedirectAttributes redirectAttributes) {
@@ -296,6 +342,11 @@ public class ValidationItemControllerV2 {
         return "redirect:/validation/v2/items/{itemId}";
     }
 
+    /**
+     * Validator 분리 (2)
+     *
+     * - @Validated: 검증기를 실행하라는 애노테이션
+     */
     @PostMapping("/add")
     public String addItemV6(@Validated @ModelAttribute Item item, BindingResult bindingResult,
                             RedirectAttributes redirectAttributes) {
